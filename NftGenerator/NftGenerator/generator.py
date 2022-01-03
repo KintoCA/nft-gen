@@ -1,5 +1,6 @@
 import constants
 import metadata
+import os
 import numpy as np
 from random import seed
 from random import random
@@ -7,6 +8,8 @@ from random import randint
 
 
 class Generator(object):
+
+	metaArray = []
 
 	def select_random_stats(self, max_number_of_stats, nft_number):
 		all_stats = []
@@ -32,7 +35,7 @@ class Generator(object):
 		elements = []
 		I = range(0, len(element_ids))
 		for i in I:
-			elements.append(constants.ELEMENT[element_ids[i]])
+			elements.append(constants.ELEMENT[element_ids[i]][0])
 		return elements
 
 	def select_random_type(self, nft_number):
@@ -76,6 +79,28 @@ class Generator(object):
 			count += 1
 		return False
 
+	def add_parameters_to_stats(self, stats, stats_range):
+		parameters = np.random.randint(stats_range[0], stats_range[1], len(stats))
+		I = range(0, len(stats))
+		parameterized_stats = []
+		for i in I:
+			parameterized_stats.append([stats[i], parameters[i]])
+		return parameterized_stats
+
+	def generate_nfts_gen(self, rank, min_damage_range, max_damage_range, stats_range, stats_num, nft_number, start_id):
+		min_damage = np.random.randint(min_damage_range[0], min_damage_range[1], nft_number)
+		max_damage = np.random.randint(max_damage_range[0], max_damage_range[1], nft_number)
+		elements = self.select_random_element(nft_number)
+		types = self.select_random_type(nft_number)
+		I = range(0, nft_number)
+		all_stats = self.select_random_stats(stats_num, nft_number)
+		for i in I:
+			parameterized_stats = self.add_parameters_to_stats(all_stats[i], stats_range)
+			md = metadata.Metadata()
+			md.set_all_values(i + start_id, types[i], elements[i], rank, min_damage[i], max_damage[i], parameterized_stats)
+			self.metaArray.append(md)
+			del md
+
 	def generate_base_nfts(self, nft_number, start_id):
 		MIN_DAMAGE	= (120, 290)
 		MAX_DAMAGE	= (290, 460)
@@ -87,37 +112,17 @@ class Generator(object):
 		stats = []
 		for i in I:
 			md = metadata.Metadata()
-			md.encode_to_json(i + start_id, types[i], elements[i], "Base", min_damage[i], max_damage[i], stats)
+			md.set_all_values(i + start_id, types[i], elements[i], "Base", min_damage[i], max_damage[i], stats)
+			self.metaArray.append(md)
 			del md
 		return
-
-	def add_parameters_to_stats(self, stats, stats_range):
-		parameters = np.random.randint(stats_range[0], stats_range[1], len(stats))
-		I = range(0, len(stats))
-		parameterized_stats = []
-		for i in I:
-			parameterized_stats.append([stats[i], parameters[i]])
-		return parameterized_stats
-
-	def generate_nfts_gen(self, min_damage_range, max_damage_range, stats_range, stats_num, nft_number, start_id):
-		min_damage = np.random.randint(min_damage_range[0], min_damage_range[1], nft_number)
-		max_damage = np.random.randint(max_damage_range[0], max_damage_range[1], nft_number)
-		elements = self.select_random_element(nft_number)
-		types = self.select_random_type(nft_number)
-		I = range(0, nft_number)
-		all_stats = self.select_random_stats(stats_num, nft_number)
-		for i in I:
-			parameterized_stats = self.add_parameters_to_stats(all_stats[i], stats_range)
-			md = metadata.Metadata()
-			md.encode_to_json(i + start_id, types[i], elements[i], "Common", min_damage[i], max_damage[i], parameterized_stats)
-			del md
-
+	
 	def generate_common_nfts(self, nft_number, start_id):
 		MIN_DAMAGE = (185, 355)
 		MAX_DAMAGE = (355, 525)
 		STATS_RANGE	= (20, 60)
 		STATS_NUM    = 1
-		self.generate_nfts_gen(MIN_DAMAGE, MAX_DAMAGE, STATS_RANGE, STATS_NUM, nft_number, start_id)
+		self.generate_nfts_gen("Common", MIN_DAMAGE, MAX_DAMAGE, STATS_RANGE, STATS_NUM, nft_number, start_id)
 
 
 	def generate_rare_nfts(self, nft_number, start_id):
@@ -125,18 +130,88 @@ class Generator(object):
 		MAX_DAMAGE = (420, 590)
 		STATS_RANGE	= (26, 66)
 		STATS_NUM      = 2
-		self.generate_nfts_gen(MIN_DAMAGE, MAX_DAMAGE, STATS_RANGE, STATS_NUM, nft_number, start_id)
+		self.generate_nfts_gen("Rare", MIN_DAMAGE, MAX_DAMAGE, STATS_RANGE, STATS_NUM, nft_number, start_id)
 
 	def generate_epic(self, nft_number, start_id):
 		MIN_DAMAGE = (315, 485)
 		MAX_DAMAGE = (485, 655)
 		STATS_RANGE	= (32, 69)
 		STATS_NUM      = 3
-		self.generate_nfts_gen(MIN_DAMAGE, MAX_DAMAGE, STATS_RANGE, STATS_NUM, nft_number, start_id)
+		self.generate_nfts_gen("Epic", MIN_DAMAGE, MAX_DAMAGE, STATS_RANGE, STATS_NUM, nft_number, start_id)
 
 	def generate_legendary(self, nft_number, start_id):
 		MIN_DAMAGE = (380, 550)
 		MAX_DAMAGE = (550, 720)
 		STATS_RANGE	= (38, 75)
 		STATS_NUM = 4
-		self.generate_nfts_gen(MIN_DAMAGE, MAX_DAMAGE, STATS_RANGE, STATS_NUM, nft_number, start_id)
+		self.generate_nfts_gen("Legendary", MIN_DAMAGE, MAX_DAMAGE, STATS_RANGE, STATS_NUM, nft_number, start_id)
+
+	def safe_to_files(self, dir_name):
+		for md in self.metaArray:
+			path = os.path.join(dir_name, md.get_nft_file_name())
+			md.save(path)
+
+	def total_generated_nfts(self):
+		return len(self.metaArray)
+
+	def shuffle_elements(self, total_nft):
+		arrayElementsId = []
+		total_neutral = int(total_nft * constants.ELEMENT[0][1])
+		I = range(0, total_neutral)
+		for i in I:
+			arrayElementsId.append(0)
+		print(arrayElementsId)
+		print(len(arrayElementsId))
+
+		total_poison = int(total_nft * constants.ELEMENT[1][1])
+		I = range(0, total_poison)
+		for i in I:
+			arrayElementsId.append(1)
+		print(arrayElementsId)
+		print(len(arrayElementsId))
+
+		total_fire = int(total_nft * constants.ELEMENT[2][1])
+		I = range(0, total_fire)
+		for i in I:
+			arrayElementsId.append(2)
+		print(arrayElementsId)
+		print(len(arrayElementsId))
+
+		total_frost = int(total_nft * constants.ELEMENT[3][1])
+		I = range(0, total_frost)
+		for i in I:
+			arrayElementsId.append(3)
+		print(arrayElementsId)
+		print(len(arrayElementsId))
+
+		total_light = int(total_nft * constants.ELEMENT[4][1])
+		I = range(0, total_light)
+		for i in I:
+			arrayElementsId.append(4)
+		print(arrayElementsId)
+		print(len(arrayElementsId))
+
+		rest = int(total_neutral + total_poison + total_fire + total_frost + total_light)
+		total_dark = total_nft - rest 
+		I = range(0, total_dark)
+		for i in I:
+			arrayElementsId.append(5)
+		print(arrayElementsId)
+		print(len(arrayElementsId))
+
+		np.random.shuffle(arrayElementsId)
+		I = range(0, len(arrayElementsId))
+		for i in I:
+			self.metaArray[i].set_element(constants.ELEMENT[arrayElementsId[i]][0])
+			print(constants.ELEMENT[arrayElementsId[i]][0])
+
+	def shuffle_ids(self):
+		I = range(1, len(self.metaArray) + 1)
+		arrayIds = []
+		for i in I:
+			arrayIds.append(i)
+		np.random.shuffle(arrayIds)
+		I = range(0, len(self.metaArray))
+		for i in I:
+			self.metaArray[i].set_id(arrayIds[i])
+		print(arrayIds)
