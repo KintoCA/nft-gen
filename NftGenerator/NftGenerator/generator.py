@@ -205,6 +205,11 @@ class Generator(object):
 			self.metaArray[i].set_element(constants.ELEMENT[arrayElementsId[i]][0])
 			print(constants.ELEMENT[arrayElementsId[i]][0])
 
+	def update_urls(self):
+		I = range(0, len(self.metaArray))
+		for i in I:
+			self.metaArray[i].update_image_url()
+
 	def shuffle_ids(self):
 		I = range(1, len(self.metaArray) + 1)
 		arrayIds = []
@@ -215,3 +220,10 @@ class Generator(object):
 		for i in I:
 			self.metaArray[i].set_id(arrayIds[i])
 		print(arrayIds)
+
+	def update_rarity(self):
+		self.metaArray.sort(key=lambda x: x.rarity, reverse=True)
+		I = range(0, len(self.metaArray))
+		for i in I:
+			print(self.metaArray[i].id, self.metaArray[i].rarity, i+7)
+			self.metaArray[i].set_rarity(i+7)

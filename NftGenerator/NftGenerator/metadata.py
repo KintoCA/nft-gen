@@ -2,6 +2,8 @@ from constants import ELEMENT_RARITY_MAP
 
 import json
 import re
+import urllib.request
+
 
 TYPE = 0
 ELEMENT = 1
@@ -11,28 +13,32 @@ MAX_DAMAGE = 4
 
 MEDIA_EXTENSION = "mp4"
 NFT_EXTENSION = "json"
-IMAGE_BASE_URL = "https://test/"
-NAME_PATTERN = "Chordus Arena Ancient Artefact #"
+IMAGE_BASE_URL = "https://storage.googleapis.com/chordus-arena/media/"
+NAME_PATTERN = "Ancient Artifact #"
+EXTERNAL_URL = "https://www.chordusarena.com"
+PREREVEAL_FILE_MEDIA = "Chordus_Arena_Logo.mp4"
 
 class Metadata():
     id = 0
+    rarity = 0
     meta  = {
-        "description": "Chordus Arena is a collection of unique, randomly generated collection of ancient artefacts on the Ethereum blockchain",
+        "description": "Chordus Arena is a collection of 3D deadly weapons that live on the Ethereum Blockchain and are ready to be held by the strongest Gladiators in the Arena. Each Ancient Artifact was manually hand-made to be absolutely stunning.",
         "image": IMAGE_BASE_URL,
         "name": NAME_PATTERN,
-        "external_url": "https://www.chordusarena.com",
+        "external_url": EXTERNAL_URL,
         "attributes": [
             ]
         }
 
     def __init__(self):
         self.meta = {
-            "description": "Chordus Arena is a collection of unique, randomly generated collection of ancient artefacts on the Ethereum blockchain",
-            "image": "https://test/",
-            "name": NAME_PATTERN,
-            "attributes": [
-                ]
-            }
+        "description": "Chordus Arena is a collection of 3D deadly weapons that live on the Ethereum Blockchain and are ready to be held by the strongest Gladiators in the Arena. Each Ancient Artifact was manually hand-made to be absolutely stunning.",
+        "image": IMAGE_BASE_URL,
+        "name": NAME_PATTERN,
+        "external_url": EXTERNAL_URL,
+        "attributes": [
+            ]
+        }
     
     def __del__(self):
         print("I'm being automatically destroyed. Goodbye!")
@@ -50,32 +56,62 @@ class Metadata():
 
         trp = self.calculate_trp()
         self.meta["attributes"].append({"trait_type": "TRP", "value": int(trp)})
-        self.meta["attributes"].append({"display_type": "number", "trait_type": "Rarity", "value": int(trp * ELEMENT_RARITY_MAP[element])})
-        file_name = self.generate_file_name(type, element, rank, MEDIA_EXTENSION)
-        self.meta["image"] += file_name
+        self.rarity = int(trp * ELEMENT_RARITY_MAP[element])
+        self.meta["attributes"].append({"display_type": "number", "trait_type": "Rarity", "value": self.rarity})
+        self.update_image_url()
         self.meta["name"] += str(id)
 
+    def set_dummy_values(self, id):
+        self.id = id
+        self.meta["name"] += str(id)
+        self.meta["image"] = IMAGE_BASE_URL + PREREVEAL_FILE_MEDIA
+        return
+
+    def extract_rarity(self):
+        for attributes in self.meta["attributes"]:
+            if attributes["trait_type"] == "Rarity":
+                self.rarity = attributes["value"]
+        return
+
+    def set_rarity(self, rarity):
+        for attributes in self.meta["attributes"]:
+            if attributes["trait_type"] == "Rarity":
+                attributes["value"] = rarity
+                self.rarity = rarity
+
+    def update_image_url(self):
+        self.meta["image"] = IMAGE_BASE_URL + self.get_media_file_name()
+
+    def get_id(self):
+        return self.id
     
     def set_id(self, id):
         self.id = id
         self.set_name()
 
+    #def get_rp(self):
+    #    for attributes in self.meta["attributes"]:
+    #        if attributes["trait_type"] == "TRP":
+    #            print(self.meta["name"], attributes["value"])
+
     def set_name(self):
         self.meta["name"] = NAME_PATTERN + str(self.id)
+
+    def get_name(self):
+        return self.meta["name"]
 
     def set_element(self, element):
         self.meta["attributes"][ELEMENT]["value"] = element
 
     def generate_file_name(self, type, element, rank, extension):
-        type = re.sub('[\s+]', '', type).lower()
-        return  type + '_' + element.lower() + '_' + rank.lower() + "." + extension
+        type = re.sub('[\s+]', '', type)
+        return  type + '_' + element + '_' + rank + "." + extension
 
     def get_nft_file_name(self):
         return str(self.id) + "." + NFT_EXTENSION
 
     def get_media_file_name(self):
         return self.generate_file_name(self.meta["attributes"][TYPE]["value"], self.meta["attributes"][ELEMENT]["value"], self.meta["attributes"][RANK]["value"], MEDIA_EXTENSION)
-
 
     def save(self, file_name):
         rawJSON = json.dumps(self.meta, indent=4)
@@ -100,7 +136,9 @@ class Metadata():
         rawJSON = f.read()
         f.close()
         self.meta = json.loads(rawJSON)
-        #rawJSON = json.dumps(obj, indent=4)
+        self.extract_rarity()
+        #rawJSON = json.dumps(self.meta, indent=4)
+        #print(rawJSON)
         #self.save("test.json", rawJSON)
         return
 
@@ -115,3 +153,19 @@ class Metadata():
             print("TRP: ", trp)
             print("Value: ", self.meta["attributes"][i]["value"])
         return trp
+
+    def get_image_url(self):
+        image_url = self.meta["image"]
+        return image_url
+
+    def verify_image_url(self):
+        image_url = self.get_image_url()
+        #print(self.get_name(), " ", image_url)
+        try:
+            with urllib.request.urlopen(image_url) as f:
+                html = f.read()
+        except:
+            print("Exception: ", self.get_name(), " ", image_url)
+        return
+
+

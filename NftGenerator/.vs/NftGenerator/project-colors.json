@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "ProjectMap": {
+    "06edaff3-28e5-4ab2-bf1e-09a5d6e4a992": {
+      "ProjectGuid": "06edaff3-28e5-4ab2-bf1e-09a5d6e4a992",
+      "DisplayName": "NftGenerator",
+      "ColorIndex": 0
+    }
+  },
+  "NextColorIndex": 1
+}

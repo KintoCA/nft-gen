@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>NftGenerator</Name>
     <RootNamespace>NftGenerator</RootNamespace>
-    <InterpreterId>Global|VisualStudio|Python310</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.10</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -35,9 +35,10 @@
     <Compile Include="nftplotter.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="plotstats.py" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|VisualStudio|Python310" />
+    <InterpreterReference Include="Global|PythonCore|3.10" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
